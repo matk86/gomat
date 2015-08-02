@@ -9,42 +9,50 @@ import (
        )
 
 func main() {
-	url := fmt.Sprintf("https://www.materialsproject.org/rest/v1/materials/%s/vasp?API_KEY=%s",
-		os.Args[1],
-		os.Getenv("MAPI_KEY") )
+	preamble := "https://www.materialsproject.org/rest/v1"
+	request_type := "materials" //"materials", "battery", "reaction", "mpquery" and "api_check"
+	identifier := os.Args[1] 
+	data_type := "vasp"
+	mapi_key := os.Getenv("MAPI_KEY")
+	url := fmt.Sprintf(
+		"%s/%s/%s/%s?API_KEY=%s",
+		preamble,
+		request_type,
+		identifier,
+		data_type,
+		mapi_key )
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Errorf("gomat: %s", err)
+	req, httperr := http.NewRequest("GET", url, nil)
+	if httperr != nil {
+		fmt.Errorf("gomat: %s", httperr)
 	}
-	resp, requestErr := client.Do(req)
-	if requestErr != nil {
-		fmt.Errorf("gomat: %s", requestErr)
+	resp, reqerr := client.Do(req)
+	if reqerr != nil {
+		fmt.Errorf("gomat: %s", reqerr)
 	}
 	defer resp.Body.Close()
-	body, dataReadErr := ioutil.ReadAll(resp.Body)
-	if dataReadErr != nil {
-		fmt.Errorf("gomat: %s", dataReadErr)
+	body, dataerr := ioutil.ReadAll(resp.Body)
+	if dataerr != nil {
+		fmt.Errorf("gomat: %s", dataerr)
 	}
 	var output interface{}
-	err = json.Unmarshal(body, &output)
-	m := output.(map[string]interface{})
-	if err != nil {
-		fmt.Errorf("gomat: %s", err)
+	jsonerr := json.Unmarshal(body, &output)
+	if jsonerr != nil {
+		fmt.Errorf("gomat: %s", jsonerr)
 	}
+	m := output.(map[string]interface{})
 	for k, v := range m {
 		switch vv := v.(type) {
 		case string:
-			fmt.Println(k, "is string", vv)
+			fmt.Println(k, " :", vv)
 		case int:
-			fmt.Println(k, "is int", vv)
+			fmt.Println(k, " :", vv)
 		case []interface{}:
-			fmt.Println(k, "is an array:")
 			for i, u := range vv {
 				fmt.Println(i, u)
 			}
 		default:
-			fmt.Println(k, "is of a type I don't know how to handle")
+			fmt.Println(k, "unknown type")
 		}
 	}
 }
