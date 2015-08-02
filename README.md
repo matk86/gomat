@@ -10,7 +10,7 @@ $ go get github.com/matk86/gomat
 ```
 
 
-##Use
+##Usage
 
 Get the API key from materialsproject and set the environment variable
 MAPI_KEY
