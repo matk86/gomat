@@ -17,7 +17,7 @@ MAPI_KEY
 
 Example:
 ```go
-$ fo run gomat.go LiF
+$ go run gomat.go LiF
 ```
 
 
