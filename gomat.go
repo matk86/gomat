@@ -1,17 +1,37 @@
 package main
 
 import (
-       "encoding/json"
-       "fmt"
-       "io/ioutil"
-       "net/http"
-       "os"
-       )
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+)
+
+func RecursiveDataProcess(d map[string]interface{}) {
+	for k, v := range d {
+		switch dd := v.(type) {
+		case []interface{}:
+			for _, u := range dd {
+				uu, _ := u.(map[string]interface{})
+				RecursiveDataProcess(uu)
+			}
+		case map[string]interface{}:
+			fmt.Println(k, " :")
+			for l, m := range dd {
+				fmt.Println("    ", l, " :", m)
+			}
+		default:
+			fmt.Println(k, " :", dd)
+		}
+	}
+
+}
 
 func main() {
 	preamble := "https://www.materialsproject.org/rest/v1"
 	request_type := "materials" //"materials", "battery", "reaction", "mpquery" and "api_check"
-	identifier := os.Args[1] 
+	identifier := os.Args[1]
 	data_type := "vasp"
 	mapi_key := os.Getenv("MAPI_KEY")
 	url := fmt.Sprintf(
@@ -20,7 +40,7 @@ func main() {
 		request_type,
 		identifier,
 		data_type,
-		mapi_key )
+		mapi_key)
 	client := &http.Client{}
 	req, httperr := http.NewRequest("GET", url, nil)
 	if httperr != nil {
@@ -32,27 +52,16 @@ func main() {
 	}
 	defer resp.Body.Close()
 	body, dataerr := ioutil.ReadAll(resp.Body)
+	//fmt.Printf(string(body))
 	if dataerr != nil {
 		fmt.Errorf("gomat: %s", dataerr)
 	}
-	var output interface{}
-	jsonerr := json.Unmarshal(body, &output)
+	var data interface{}
+	jsonerr := json.Unmarshal(body, &data)
 	if jsonerr != nil {
 		fmt.Errorf("gomat: %s", jsonerr)
 	}
-	m := output.(map[string]interface{})
-	for k, v := range m {
-		switch vv := v.(type) {
-		case string:
-			fmt.Println(k, " :", vv)
-		case int:
-			fmt.Println(k, " :", vv)
-		case []interface{}:
-			for i, u := range vv {
-				fmt.Println(i, u)
-			}
-		default:
-			fmt.Println(k, "unknown type")
-		}
-	}
+	d := data.(map[string]interface{})
+	RecursiveDataProcess(d)
+	fmt.Println("Done")
 }
